@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fuzzy ELO Matchmaking Tester</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; display: flex; justify-content: center; padding-top: 50px; }
+        .card { background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); width: 100%; max-width: 400px; }
+        h2 { text-align: center; color: #333; margin-top: 0; }
+        label { display: block; margin-top: 15px; color: #666; font-weight: bold; }
+        input { width: 100%; padding: 10px; margin-top: 5px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; }
+        button { width: 100%; padding: 12px; margin-top: 25px; background: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; font-weight: bold;}
+        button:hover { background: #34495e; }
+        .result { margin-top: 20px; padding: 15px; border-radius: 5px; display: none; background: #e8f4f8; border-left: 5px solid #3498db;}
+        .result span { font-weight: bold; color: #2c3e50; }
+    </style>
+</head>
+<body>
+
+<div class="card">
+    <h2>Tester Matchmaking</h2>
+    <div class="form-group">
+        <label>ELO Pemain 1</label>
+        <input type="number" id="elo1" value="1500">
+        
+        <label>ELO Pemain 2</label>
+        <input type="number" id="elo2" value="1650">
+        
+        <label>Waktu Tunggu (Detik)</label>
+        <input type="number" id="waktu" value="15">
+        
+        <button onclick="testMatch()">Evaluasi Match</button>
+    </div>
+
+    <div class="result" id="resultBox">
+        <p>Delta ELO: <span id="resDelta"></span></p>
+        <p>Skor Kecocokan: <span id="resSkor"></span>%</p>
+        <p>Keputusan: <span id="resStatus"></span></p>
+    </div>
+</div>
+
+<script>
+    async function testMatch() {
+        const elo1 = document.getElementById('elo1').value;
+        const elo2 = document.getElementById('elo2').value;
+        const waktu = document.getElementById('waktu').value;
+
+        const response = await fetch('/api/evaluate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ elo_p1: elo1, elo_p2: elo2, waktu_tunggu: waktu })
+        });
+
+        const data = await response.json();
+        
+        if(data.success) {
+            document.getElementById('resultBox').style.display = 'block';
+            document.getElementById('resDelta').innerText = data.delta_elo;
+            document.getElementById('resSkor').innerText = data.skor_kecocokan;
+            
+            const statusEl = document.getElementById('resStatus');
+            statusEl.innerText = data.keputusan;
+            
+            if(data.skor_kecocokan >= 60) statusEl.style.color = '#27ae60';
+            else if(data.skor_kecocokan >= 40) statusEl.style.color = '#f39c12';
+            else statusEl.style.color = '#c0392b';
+        }
+    }
+</script>
+
+</body>
+</html>
